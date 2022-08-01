@@ -1,0 +1,8 @@
+{
+    
+    "diff": [ "The results of this review support the use of __interventions__ to treat  __outcomes__ in patients with __population__"
+    ],
+    "no_diff": [ "There is insufficient evidence to determine whether __interventions__ is beneficial for __outcomes__ in __population__"
+    ]
+
+}

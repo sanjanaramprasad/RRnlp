@@ -5,6 +5,7 @@ interface; will pull everything it can from an input article.
 Note: if you find this useful, please see: 
         https://github.com/bwallace/RRnlp#citation.
 '''
+import pandas as pd
 from typing import Type, Tuple, List
 
 import warnings
@@ -13,8 +14,9 @@ import rrnlp
 
 from rrnlp.models import PICO_tagger, ev_inf_classifier, \
                         sample_size_extractor, RoB_classifier_LR, \
-                        RCT_classifier
+                        RCT_classifier, structured_summarizer
 
+from transformers import LEDTokenizer
 class TrialReader:
 
     def __init__(self):
@@ -105,3 +107,81 @@ class TrialReader:
 #           """
 # }
 # preds = trial_reader.read_trial(ti_abs)
+'''
+
+'''
+
+class MetaReviewer:
+    def __init__(self, model_type):
+        #self.trial_reader = TrialReader()
+        
+        self.model_type = model_type
+        
+        additional_special_tokens = ['<population>', '</population>',
+                            '<interventions>', '</interventions>',
+                            '<outcomes>', '</outcomes>',
+                            '<punchline_text>', '</punchline_text>',
+                            '<study>', '</study>', "<sep>"]
+
+
+        self.tokenizer = LEDTokenizer.from_pretrained("allenai/led-base-16384", bos_token="<s>",
+                                                                    eos_token="</s>",
+                                                                    pad_token = "<pad>")
+        self.tokenizer.add_tokens(additional_special_tokens)
+        self.ev_bot = ev_inf_classifier.EvInfBot()
+        
+        if model_type == 'vanilla':
+            self.max_input_len = 16000
+            self.model = structured_summarizer.VanillaSummaryBot(self.max_input_len)
+            
+        else:
+            self.max_input_len = 3072
+            self.model = structured_summarizer.StructuredSummaryBot( self.max_input_len)
+        
+        
+    def summarize(self, data):
+        summ = self.model.summarize(data, self.ev_bot)
+        return summ
+    
+    def summarize_template(self, data, summary, direc):
+        summ = self.model.summarize_template(data, summary, direc, self.ev_bot)
+        return summ
+              
+        
+        
+
+        
+# class MetaReviewer:
+#     """Produces a summary of multiple related rcts"""
+#     def __init__(self):
+#         #self.trial_reader = TrialReader()
+#         self.max_input_len = 3072
+#         additional_special_tokens = ['<population>', '</population>',
+#                             '<interventions>', '</interventions>',
+#                             '<outcomes>', '</outcomes>',
+#                             '<punchline_text>', '</punchline_text>',
+#                             '<study>', '</study>', "<sep>"]
+
+
+#         self.tokenizer = LEDTokenizer.from_pretrained("allenai/led-base-16384", bos_token="<s>",
+#                                                                     eos_token="</s>",
+#                                                                     pad_token = "<pad>")
+#         self.max_length = 3072
+#         self.pad_to_max_length = True
+
+                                                                    
+#         self.tokenizer.add_tokens(additional_special_tokens)
+
+#         self.model = structured_summarizer.StructuredSummaryBot( self.max_length)
+#         self.ev_bot = ev_inf_classifier.EvInfBot()
+
+    
+        
+#     def summarize(self, data):
+#         batch = self.process_spans(data)
+#         return self.model.summarize(batch)
+
+
+'''
+
+'''
